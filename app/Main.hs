@@ -7,4 +7,4 @@ import qualified Data.ByteString
 main :: IO ()
 main = do
     print genesisBlock
-    print $ sha256Block genesisBlock
+    print $ hashBlock genesisBlock

@@ -11,30 +11,35 @@ data Transaction = Transaction { from   :: String
                                , pow    :: String -- Proof of work
                                } deriving (Show)
 
-data Block = Block { index :: Int  -- Index of the block
-                   , txs   :: [Transaction] -- List of transactions in the block
-                   , hash  :: Data.ByteString.ByteString -- Hash of the block
+data Block = Block { index    :: Int  -- Index of the block
+                   , txs      :: [Transaction] -- List of transactions in the block
+                   , hash     :: Data.ByteString.ByteString -- Hash of the block
+                   , prevHash :: Data.ByteString.ByteString -- Prev Hash of the block
                    } deriving (Show)
 
 -- Str8 to word8
 strToWord8 :: String -> [Data.Word.Word8]
 strToWord8 = map unsafeCoerce
 
+strToByteString :: String -> Data.ByteString.ByteString
+strToByteString = Data.ByteString.pack . strToWord8
+
 -- SHA256 our Block
--- Blockhash is dependent on current block
-sha256Block :: Block -> Data.ByteString.ByteString
-sha256Block (Block blockIndex blockTxs blockHash) = digest
+-- Blockhash is dependent on current block and prev block hash
+hashBlock :: Block -> Data.ByteString.ByteString
+hashBlock (Block blockIndex blockTxs blockHash prevHash) = digest
     where blockTxStr = foldr ((++) . show) "" blockTxs
           blockString = show blockIndex ++ blockTxStr ++ show blockHash
-          blockByteStr = (Data.ByteString.pack . strToWord8) blockString
+          blockByteStr = strToByteString blockString
           ctx0 = SHA256.init
-          ctx = foldl SHA256.update ctx0 [blockByteStr]
+          ctx = foldl SHA256.update ctx0 [Data.ByteString.append blockByteStr prevHash]
           digest = SHA256.finalize ctx
 
 
 -- Our genesis block
 genesisBlock :: Block
-genesisBlock = Block blockIndex blockTxs blockHash
+genesisBlock = Block blockIndex blockTxs blockHash prevHash
     where blockIndex = 0
           blockTxs = [Transaction "heaven" "kendrick" 15 "000000000000000000000000000000000"]
-          blockHash = (Data.ByteString.pack . strToWord8) "000000000000000000000000000000001"
+          blockHash = strToByteString "000000000000000000000000000000001"
+          prevHash = strToByteString "000000000000000000000000000000000"
