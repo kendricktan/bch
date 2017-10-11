@@ -3,7 +3,7 @@ module Lib where
 import qualified Crypto.Hash.SHA256     as SHA256
 import           Data.ByteString        (ByteString, append, pack)
 import           Data.ByteString.Base16 (decode, encode)
-import           Data.ByteString.UTF8   (fromString)
+import           Data.ByteString.UTF8   (fromString, toString)
 import qualified Data.Word
 import           Unsafe.Coerce          (unsafeCoerce)
 
@@ -24,7 +24,7 @@ data Block = Block { index    :: Int  -- Index of the block
 hashBlock :: Block -> ByteString
 hashBlock (Block blockIndex blockTxs blockHash prevHash _) = encode digest
     where blockTxStr = foldr ((++) . show) "" blockTxs
-          blockString = blockTxStr ++ show blockHash
+          blockString = blockTxStr ++ toString blockHash
           blockByteStr = fromString blockString
           ctx = SHA256.updates SHA256.init [blockByteStr, prevHash]
           digest = SHA256.finalize ctx
@@ -34,11 +34,11 @@ hashBlock (Block blockIndex blockTxs blockHash prevHash _) = encode digest
 mineBlock :: Block -> Int -> Block
 mineBlock b@(Block i t h p _) n = case head pow of
                                     '0' -> Block i t h p (Just n)
-                                    _   -> mineBlock b (i + 1)
+                                    _   -> mineBlock b (n + 1)
     where blockHash = hashBlock b
           nonce = fromString $ show n
           ctx = SHA256.updates SHA256.init [blockHash, nonce]
-          pow = show . encode $ SHA256.finalize ctx
+          pow = toString . encode $ SHA256.finalize ctx
 
 
 -- Our genesis block
