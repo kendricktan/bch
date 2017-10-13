@@ -29,6 +29,11 @@ hashBlock (Block blockIndex blockTxs blockHash prevHash _) = encode digest
           ctx = SHA256.updates SHA256.init [blockByteStr, prevHash]
           digest = SHA256.finalize ctx
 
+-- Adds a transaction to the head of the block
+--
+blockAddTx :: Block -> Transaction -> Block
+blockAddTx (Block i ts h p n) t = Block i (ts ++ [t]) h p n
+
 -- Mine the block
 -- sha256 of the hashed block starts with a 0
 mineBlock :: Block -> Int -> Block
