@@ -86,13 +86,13 @@ main = do
     runner <- restartableStateT [genesisBlock]
     runSpock 8080 $ spockT (runStateT runner) $ do
         get "/" $ (S.lift getBlockchain) >>= json
-        get "current" $ (S.lift current) >>= json
-        get "mine" $ (S.lift mine) >>= json
+        get "current" $ (S.lift current) >>= json        
         get "block" $ do
             blockid <- param "blockid"
             case blockid of
               (Just h) -> (S.lift $ getBlockhash h) >>= json
               _        -> text "please supply blockid"
+        post "mine" $ (S.lift mine) >>= json
         post "addtx" $ do
             from <- param "from"
             to <- param "to"
